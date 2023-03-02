@@ -26,6 +26,6 @@ namespace Skripts
 
         public string Key => key;
 
-        public Sprite Sprite1 => sprite;
+        public Sprite Sprite => sprite;
     }
 }

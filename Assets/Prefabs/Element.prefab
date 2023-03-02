@@ -215,6 +215,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68d65014bec243f98dba73ca5c22dab0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bgSpriteRenderer: {fileID: 2456604970787297972}
+  iconSpriteRenderer: {fileID: 7534875773885708115}
 --- !u!61 &5444046848818524831
 BoxCollider2D:
   m_ObjectHideFlags: 0
