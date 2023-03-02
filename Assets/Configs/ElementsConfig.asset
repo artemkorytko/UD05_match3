@@ -15,11 +15,16 @@ MonoBehaviour:
   items:
   - key: Aquamarin
     sprite: {fileID: 21300000, guid: 95f5da73d2e27934589e6f9e1c8137ab, type: 3}
+    id: 1
   - key: Red
     sprite: {fileID: 21300000, guid: f6e834b8e0f64c94b86c04a9a2eb7f90, type: 3}
+    id: 2
   - key: Yellow
     sprite: {fileID: 21300000, guid: 9905b439cfdab734381a48991d7488f1, type: 3}
+    id: 3
   - key: Dark_Blue
     sprite: {fileID: 21300000, guid: 53e54ae94a7ae1c49ad8dd9abc5cfd34, type: 3}
-  - key: Emerald
-    sprite: {fileID: 21300000, guid: bce4d03b5168af846aa6e763bf2fdaa1, type: 3}
+    id: 4
+  - key: Green
+    sprite: {fileID: 21300000, guid: fc7b0bdb24c6a6e4992d799df295eeef, type: 3}
+    id: 5

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Match3.Signals;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 using Random = UnityEngine.Random;
 
@@ -17,6 +19,8 @@ namespace Match3
         private Element[,] _elements;
         private Element _firstSelected;
         private bool _isBlocked;
+        private int _row;
+        private int _column;
 
         public BoardController(ElementsConfig config, Element.Factory factory, BoardConfig boardConfig, SignalBus signalBus)
         {
@@ -28,7 +32,6 @@ namespace Match3
         
         public void Initialize()
         {
-            // _factory.Create(_config.GetItemByKey("Aquamarin"), new ElementPosition(Vector2.zero,Vector2.zero));
             GenerateElements();
             _signalBus.Subscribe<OnElementClickSignal>(OnElementClick);
         }
@@ -56,7 +59,7 @@ namespace Match3
                     _firstSelected.SetSelected(false);
                     Swap(_firstSelected, element);
                     _firstSelected = null;
-                    // CheckBoard();
+                    CheckBoard();
                 }
                 else
                 {
@@ -95,15 +98,50 @@ namespace Match3
                     NormalizeBoard();
                     isNeedRecheck = true;
                 }
-
             } while (isNeedRecheck);
-            
+
             _isBlocked = false;
         }
         
         private List<Element> SearchLines()
         {
-            return null;
+            var foundMatches = new List<Element>();
+
+            for (int y = 0; y < _row; y++)
+            {
+                for (int x = 2; x < _column; x++)
+                {
+                    var firstElement = _elements[x - 2, y];
+                    var secondElement = _elements[x - 1, y];
+                    var thirdElement = _elements[x, y];
+
+                    if (firstElement.ID == secondElement.ID && firstElement.ID == thirdElement.ID)
+                    {
+                        foundMatches.Add(firstElement);
+                        foundMatches.Add(secondElement);
+                        foundMatches.Add(thirdElement);
+                    }
+                }
+            }
+            
+            for (int x = 0; x < _column; x++)
+            {
+                for (int y = 2; y < _row; y++)
+                {
+                    var firstElement = _elements[x, y - 2];
+                    var secondElement = _elements[x, y - 1];
+                    var thirdElement = _elements[x, y];
+
+                    if (firstElement.ID == secondElement.ID && firstElement.ID == thirdElement.ID)
+                    {
+                        foundMatches.Add(firstElement);
+                        foundMatches.Add(secondElement);
+                        foundMatches.Add(thirdElement);
+                    }
+                }
+            }
+
+            return foundMatches;
         }
 
         private void DisableElements(List<Element> elementsForCollecting)
@@ -116,13 +154,52 @@ namespace Match3
         
         private void NormalizeBoard()
         {
-            
+            DropDown();
+            FillEmpties();
         }
 
-        private bool isCanSwap(Element firstSelected, Element element)
+        private void DropDown()
         {
-            var pos1 = firstSelected.GridPosition;
-            var pos2 = element.GridPosition;
+            for (int y = _row - 1; y >= 0; y--)
+            {
+                for (int x = 0; x < _column; x++)
+                {
+                    if (_elements[x, y].IsActive == false)
+                    {
+                        for (int z = y - 1; z >= 0; z--)
+                        {
+                            if (_elements[x, z].IsActive == true)
+                            {
+                                Swap(_elements[x, y], _elements[x, z]);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        private void FillEmpties()
+        {
+            for (int y = 0; y < _row; y++)
+            {
+                for (int x = 0; x < _column; x++)
+                {
+                    if (_elements[x, y].IsActive == false)
+                    {
+                        // var element = GetPossibleElement(x, y, _column, _row);
+                        var rnd = Random.Range(0, _config.Items.Length);
+                        var element = _config.Items[rnd];
+                        _elements[x, y].ResetElement(element);
+                    }
+                }
+            }
+        }
+
+        private bool isCanSwap(Element first, Element second)
+        {
+            var pos1 = first.GridPosition;
+            var pos2 = second.GridPosition;
 
             var comparePos = pos1;
             comparePos.x += 1;
@@ -155,34 +232,34 @@ namespace Match3
             return false;
         }
         
-        private void Swap(Element firstSelected, Element element)
+        private void Swap(Element first, Element second)
         {
-            _elements[(int)firstSelected.GridPosition.x, (int)firstSelected.GridPosition.y] = element;
-            _elements[(int)element.GridPosition.x, (int)element.GridPosition.y] = firstSelected;
+            _elements[(int)first.GridPosition.x, (int)first.GridPosition.y] = second;
+            _elements[(int)second.GridPosition.x, (int)second.GridPosition.y] = first;
 
-            var pos = element.transform.localPosition;
-            var gridPos = element.GridPosition;
+            var pos = second.transform.localPosition;
+            var gridPos = second.GridPosition;
 
-            element.SetLocalPosition(firstSelected.transform.localPosition, firstSelected.GridPosition);
-            firstSelected.SetLocalPosition(pos, gridPos);
+            second.SetLocalPosition(first.transform.localPosition, first.GridPosition);
+            first.SetLocalPosition(pos, gridPos);
         }
 
         private void GenerateElements()
         {
-            var column = _boardConfig.SizeX;
-            var row = _boardConfig.SizeY;
+            _column = _boardConfig.SizeX;
+            _row = _boardConfig.SizeY;
             var offset = _boardConfig.ElementOffset;
 
-            _elements = new Element[column, row];
+            _elements = new Element[_column, _row];
 
-            var startPos = new Vector2(-column * 0.5f + offset * 0.5f, row * 0.5f - offset * 0.5f);
+            var startPos = new Vector2(-_column * 0.5f + offset * 0.5f, _row * 0.5f - offset * 0.5f);
 
-            for (int y = 0; y < row; y++)
+            for (int y = 0; y < _row; y++)
             {
-                for (int x = 0; x < column; x++)
+                for (int x = 0; x < _column; x++)
                 {
                     var pos = startPos + new Vector2(offset * x, -offset * y);
-                    var element = _factory.Create(GetPossibleElement(x, y, column, row), new ElementPosition(pos, new Vector2(x, y)));
+                    var element = _factory.Create(GetPossibleElement(x, y, _column, _row), new ElementPosition(pos, new Vector2(x, y)));
                     element.Initialize();
                     _elements[x, y] = element;
                 }

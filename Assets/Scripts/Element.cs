@@ -13,18 +13,23 @@ namespace Match3
         [SerializeField] private SpriteRenderer bgSpriteRenderer;
         [SerializeField] private SpriteRenderer iconSpriteRenderer;
 
+        private ParticleSystem _fx;
+
         private ElementConfigItem _configItem;
         private ElementPosition _elementPosition;
         private SignalBus _signalBus;
 
         private Vector2 _localPosition;
         private Vector2 _gridPosition;
+        private int _id;
 
         public Vector2 GridPosition => _gridPosition;
 
         public ElementConfigItem ConfigItem => _configItem;
         
         public bool IsActive { get; private set; }
+
+        public int ID => _id;
 
         [Inject]
         public void Construct(ElementConfigItem configItem, ElementPosition elementPosition, SignalBus signalBus)
@@ -38,6 +43,8 @@ namespace Match3
         {
             _localPosition = _elementPosition.LocalPosition;
             _gridPosition = _elementPosition.GridPosition;
+            _id = _configItem.ID;
+            _fx = GetComponentInChildren<ParticleSystem>();
             SetConfig();
             SetLocalPosition();
             Enable();
@@ -67,6 +74,13 @@ namespace Match3
             SetSelected(false);
         }
 
+        public void ResetElement(ElementConfigItem config)
+        {
+            iconSpriteRenderer.sprite = config.Sprite;
+            _id = config.ID;
+            Enable();
+        }
+
         public void SetSelected(bool isOn)
         {
             bgSpriteRenderer.enabled = isOn;
@@ -86,6 +100,7 @@ namespace Match3
         {
             IsActive = false;
             gameObject.SetActive(false);
+            _fx.Play();
         }
     }
 }
