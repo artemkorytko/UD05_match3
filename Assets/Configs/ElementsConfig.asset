@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5415d532f9b048fbbbe151274227d892, type: 3}
+  m_Name: ElementsConfig
+  m_EditorClassIdentifier: 
+  items:
+  - key: Aquamarin
+    sprite: {fileID: 21300000, guid: 95f5da73d2e27934589e6f9e1c8137ab, type: 3}
+    id: 1
+  - key: Red
+    sprite: {fileID: 21300000, guid: f6e834b8e0f64c94b86c04a9a2eb7f90, type: 3}
+    id: 2
+  - key: Yellow
+    sprite: {fileID: 21300000, guid: 9905b439cfdab734381a48991d7488f1, type: 3}
+    id: 3
+  - key: Dark_Blue
+    sprite: {fileID: 21300000, guid: 53e54ae94a7ae1c49ad8dd9abc5cfd34, type: 3}
+    id: 4
+  - key: Green
+    sprite: {fileID: 21300000, guid: fc7b0bdb24c6a6e4992d799df295eeef, type: 3}
+    id: 5

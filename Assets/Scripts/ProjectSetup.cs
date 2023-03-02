@@ -1,0 +1,21 @@
+﻿using UnityEngine;
+using Zenject;
+
+namespace Match3
+{
+    public class ProjectSetup : IInitializable
+    {
+        private readonly ProjectSettings _settings;
+
+        public ProjectSetup(ProjectSettings settings)
+        {
+            _settings = settings;
+        }
+
+        public void Initialize()
+        {
+            Application.targetFrameRate = _settings.TargetFPS;
+            Input.multiTouchEnabled = _settings.IsMultitouch;
+        }
+    }
+}
