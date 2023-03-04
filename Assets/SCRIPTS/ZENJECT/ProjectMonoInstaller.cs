@@ -6,6 +6,9 @@ public class ProjectMonoInstaller : MonoInstaller
 {
     public override void InstallBindings()
     {
+        // вызываем инсталлер и говорим внутрь какого контейнера инсталлиться - в глобальный 
+        // после этогосигналбас появится в проекте
+        // подключается в Element в конструторе
         SignalBusInstaller.Install(Container);
         
         // забиндить ProjectSetup

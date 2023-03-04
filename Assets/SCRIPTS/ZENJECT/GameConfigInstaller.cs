@@ -12,6 +12,7 @@ public class GameConfigInstaller : ScriptableObjectInstaller<GameConfigInstaller
     public override void InstallBindings()
     {
         // и биндится тут ссылка выше
+        // можно по одному BindInstance, или Instancies и через запятую
         Container.BindInstances( elementsConfig, boardConfig);
     }
 }

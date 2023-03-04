@@ -25,6 +25,7 @@ namespace Match3
             // тут пусто, это ок
         }
 
+        // ссылки на картинки из префаба
         [SerializeField] private SpriteRenderer bgSpriteRenderer;
         [SerializeField] private SpriteRenderer iconSpriteRenderer;
 
@@ -33,62 +34,84 @@ namespace Match3
         private ElementPosition _elementPosition;
         private SignalBus _signalBus;
 
-        private Vector2 _localPosition;
+        // распарсить информацию из element position в локальные переменные шоб с ним работать
+        private Vector2 _localPosition; 
         private Vector2 _gridPosition;
 
+        // гридовкую позицию на сцене будем читать снаружи поэтому инкапсулируем:
         public Vector2 GridPosition => _gridPosition;
+        
+        // инкапуслируем конфиг наружу:
         public ElementConfigItem ConfigItem => _configItem;
 
+        // для установки активная ли брюлина, это для анимации обычная пропертя
         public bool IsActive { get; private set; }  // считать откуда угодно а задать только внутри
+        
+        
+        
 
         //--------------- inject МОНОБЕХУ ------------------------------------------------------------
         // В Монобехе нельзя делать конструкторы но у ZenJect есть на этот случай спец метод Construct
         // на вход просит элемент ConfigItem
         [Inject] // аттрибут дабы конструктор заработал - требует инъекцию зависимости и контейнер передаст сюдой
         // вон там используется структура с позицией и пр
+        // signalBus был подключен в ProjMonoinstaller
         public void Construct(ElementConfigItem configItem, ElementPosition elementPosition, SignalBus signalBus)
         {
-            _configItem = configItem;
+            _configItem = configItem; // локальные переменные 
             _elementPosition = elementPosition; // ссылки на них
             _signalBus = signalBus;
         }
-
+        
         public void Initialize()
         {
-            _localPosition = _elementPosition.LocalPosition;
-            _gridPosition = _elementPosition.GridPosition;
+            // вот тут хреново понятно что куда?????????????????????
+            _localPosition = _elementPosition.LocalPosition; // в ElementPosition структуре инфа берется из... логики?
+            _gridPosition = _elementPosition.GridPosition; // получили вторую позицию
+            
+            // применяем конфиги и локал позицию:
             SetConfig();
             SetLocalPosition();
+            // сделать иконку активной
             Enable();
         }
 
+        
+        //--------------------------------------------------------------------------------
         private void SetConfig()
         {
+            // устанавливаем иконку, какую передали из конфига
             iconSpriteRenderer.sprite = _configItem.Sprite;
         }
 
         private void SetLocalPosition()
         {
+            // тут анимация наверное
             transform.localPosition = _localPosition;
         }
 
+        // два одинаковых, ыыыы
+        // в этот приходит когда надо поменять местами из борд контроллера
         public void SetLocalPosition(Vector2 localPosition, Vector2 gridPosition)
         {
-            _localPosition = localPosition;
-            _gridPosition = gridPosition;
-            SetLocalPosition();
+            _localPosition = localPosition; // старое равно чему пришло
+            _gridPosition = gridPosition; 
+            SetLocalPosition(); // метод на перемещение САМ В СЕБЕЕ или верхний ??? О_о
         }
 
         private void Enable()
         {
+            // активный и включет, потом анимация будет переиспользования
             gameObject.SetActive(true);
-            IsActive = true;
-            SetSelected(false);
+            IsActive = true; // местная булевская
+            
+            SetSelected(false); // выключить подсветку
         }
 
+        // метод ВКЛ/ВЫКЛ ЗАДНИК 
         public void SetSelected(bool isOn)
         {
-            bgSpriteRenderer.enabled = isOn;
+            bgSpriteRenderer.enabled = isOn; // прикоооол классно! хочу так же у зайца
         }
 
         private void OnMouseUpAsButton() //!!!!!!!!!!!!!!!!! помни - если есть коллайдер
@@ -100,13 +123,18 @@ namespace Match3
 
         private void OnClick() // паттерн EventBUS 
         {
+            // сигналбас, вызови событие - сигналы в отдельной папке скриптов Signals
+            // "зафайрить"
+            // создаем новый экземпляр, кидаем в signalBus, кто подписан тот получит когда вызовут
             _signalBus.Fire(new OnElementClickSignal(this));
+            // шоб рассказать системе что есть такой сигнал надо в GameMonoInstaller
         }
 
-        public void Disable()
+        
+        public void Disable() // выззывается бордой когда набрали массив собранных 
         {
             IsActive = false;
-            gameObject.SetActive(false);
+            gameObject.SetActive(false); // мы его переиспользуем
         }
     }
 }

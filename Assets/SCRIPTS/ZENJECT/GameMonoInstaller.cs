@@ -1,5 +1,6 @@
 using Match3;
-//using Match3.Zenject;
+using Match3.Signals;
+// using Match3.Zenject; // убрать
 using UnityEngine;
 using Zenject;
 
@@ -10,9 +11,10 @@ public class GameMonoInstaller : MonoInstaller
 
     public override void InstallBindings()
     {
+        // инсталлер сигналов надо перед основной логикой
         // SignalBusInstaller.Install(Container);
-        // SignalsInstaller.Install(Container);
-        SignalInstaller.Install(Container);
+        SignalsInstaller.Install(Container);
+        // SignalInstaller.Install(Container);
         
         // биндится борд котнтроллер (создает класс BC)
         Container.BindInterfacesAndSelfTo<BoardController>().AsSingle().NonLazy();
@@ -24,5 +26,7 @@ public class GameMonoInstaller : MonoInstaller
         // Element - к какому классу относится
         // Element.Factory - кого используем в качестве фабрики
         // FromComponentInNewPrefab(elementPrefab) - какой префаб используем для создания фабрики
+
+        
     }
 }
