@@ -1,4 +1,6 @@
 using System;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Match3.Signals;
 using UnityEngine;
 using Zenject;
@@ -40,7 +42,7 @@ namespace Match3
             _gridPosition = _elementPosition.GridPosition;
             SetConfig();
             SetLocalPosition();
-            Enable();
+            Enable().Forget();
         }
 
         private void SetConfig()
@@ -53,18 +55,26 @@ namespace Match3
             transform.localPosition = _localPosition;
         }
 
+        public void SetConfig(ElementConfigItem configItem)
+        {
+            _configItem = configItem;
+            SetConfig();
+        }
+
         public void SetLocalPosition(Vector2 localPosition, Vector2 gridPosition)
         {
             _localPosition = localPosition;
             _gridPosition = gridPosition;
-            SetLocalPosition();
+             SetLocalPosition();
         }
 
-        private void Enable()
+        public async UniTask Enable()
         {
             gameObject.SetActive(true);
             IsActive = true;
             SetSelected(false);
+            transform.localScale = Vector3.zero;
+            await transform.DOScale(Vector3.one, 0.5f);
         }
 
         public void SetSelected(bool isOn)
@@ -82,9 +92,10 @@ namespace Match3
             _signalBus.Fire(new OnElementClickSignal(this));
         }
 
-        public void Disable()
+        public async UniTask Disable()
         {
             IsActive = false;
+            await transform.DOScale(Vector3.zero, 0.5f);
             gameObject.SetActive(false);
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Match3.Signals;
 using UnityEngine;
 using Zenject;
@@ -28,21 +29,27 @@ namespace Match3
 
         public void Initialize()
         {
-            //_factory.Create(_config.GetItemByKey("Blue"), new ElementPosition(Vector2.zero, Vector2.zero));
             GenerateElements();
             _signalBus.Subscribe<OnElementClickSignal>(OnElementClick);
+            _signalBus.Subscribe<RestartButtonSignal>(DoRestart);
         }
 
         public void Dispose()
         {
             _signalBus.Unsubscribe<OnElementClickSignal>(OnElementClick);
+            _signalBus.Unsubscribe<RestartButtonSignal>(DoRestart);
         }
 
-        private void OnElementClick(OnElementClickSignal signal)
+        private void DoRestart()
         {
-            if(_isBlocked)
+            Debug.Log("Restart");
+        }
+
+        private async void OnElementClick(OnElementClickSignal signal)
+        {
+            if (_isBlocked)
                 return;
-            
+
             var element = signal.Element;
             if (_firstSelected == null)
             {
@@ -56,7 +63,7 @@ namespace Match3
                     _firstSelected.SetSelected(false);
                     Swap(_firstSelected, element);
                     _firstSelected = null;
-                   // CheckBoard();
+                    await CheckBoard();
                 }
                 else
                 {
@@ -75,12 +82,12 @@ namespace Match3
             }
         }
 
-        private void CheckBoard()
+        private async UniTask CheckBoard()
         {
             _isBlocked = true;
 
             bool isNeedRecheck = false;
-            
+
             var elementsForCollecting = new List<Element>();
 
             do
@@ -88,12 +95,11 @@ namespace Match3
                 isNeedRecheck = false;
                 elementsForCollecting.Clear();
                 elementsForCollecting = SearchLines();
-
                 if (elementsForCollecting.Count > 0)
                 {
-                    DisableElements(elementsForCollecting);
-                    //signal for counter
-                    NormalizeBoard();
+                    await DisableElements(elementsForCollecting);
+                    _signalBus.Fire(new OnBoardMatchSignal(elementsForCollecting.Count));
+                    await NormalizeBoard();
                     isNeedRecheck = true;
                 }
             } while (isNeedRecheck);
@@ -101,22 +107,160 @@ namespace Match3
             _isBlocked = false;
         }
 
-        private void NormalizeBoard()
-        {
-            
-        }
-
-        private void DisableElements(List<Element> elementsForCollecting)
-        {
-            foreach (var element in elementsForCollecting)
-            {
-                element.Disable();
-            }
-        }
-
         private List<Element> SearchLines()
         {
-            return null;
+            var elementsForCollecting = new List<Element>();
+
+            var column = _boardConfig.SizeX;
+            var row = _boardConfig.SizeY;
+
+            for (int y = 0; y < row; y++)
+            {
+                for (int x = 0; x < column; x++)
+                {
+                    if (_elements[x, y].IsActive && !elementsForCollecting.Contains(_elements[x, y]))
+                    {
+                        List<Element> checkResult;
+                        bool needAddFirst = false;
+                        checkResult = CheckHorizontal(x, y);
+                        if (checkResult != null && checkResult.Count >= 2)
+                        {
+                            needAddFirst = true;
+                            elementsForCollecting.AddRange(checkResult);
+                        }
+
+                        checkResult = CheckVertical(x, y);
+                        if (checkResult != null && checkResult.Count >= 2)
+                        {
+                            needAddFirst = true;
+                            elementsForCollecting.AddRange(checkResult);
+                        }
+
+                        if (needAddFirst)
+                        {
+                            elementsForCollecting.Add(_elements[x, y]);
+                        }
+                    }
+                }
+            }
+
+            return elementsForCollecting;
+        }
+
+        private List<Element> CheckHorizontal(int x, int y)
+        {
+            var column = _boardConfig.SizeX;
+            int nextColumn = x + 1;
+
+            if (nextColumn >= column)
+            {
+                return null;
+            }
+
+            var elementsInLine = new List<Element>(column);
+            var element = _elements[x, y];
+            while (_elements[nextColumn, y].IsActive && element.ConfigItem.Key == _elements[nextColumn, y].ConfigItem.Key)
+            {
+                elementsInLine.Add(_elements[nextColumn, y]);
+                if (nextColumn + 1 < column)
+                {
+                    nextColumn++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return elementsInLine;
+        }
+
+        private List<Element> CheckVertical(int x, int y)
+        {
+            var row = _boardConfig.SizeY;
+            int nextRow = y + 1;
+
+            if (nextRow >= row)
+            {
+                return null;
+            }
+
+            var elementsInLine = new List<Element>(row);
+            var element = _elements[x, y];
+            while (_elements[x, nextRow].IsActive && element.ConfigItem.Key == _elements[x, nextRow].ConfigItem.Key)
+            {
+                elementsInLine.Add(_elements[x, nextRow]);
+                if (nextRow + 1 < row)
+                {
+                    nextRow++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return elementsInLine;
+        }
+
+        private async UniTask NormalizeBoard()
+        {
+            var column = _boardConfig.SizeX;
+            var row = _boardConfig.SizeY;
+
+            for (int x = column - 1; x >= 0; x--)
+            {
+                var freeElements = new List<Element>(row);
+                for (int y = row - 1; y >= 0; y--)
+                {
+                    if (y >= 0 && !_elements[x, y].IsActive)
+                    {
+                        freeElements.Add(_elements[x, y]);
+                        y--;
+                    }
+
+                    if (y >= 0 && freeElements.Count > 0)
+                    {
+                        Swap(_elements[x, y], freeElements[0]);
+                        freeElements.Add(freeElements[0]);
+                        freeElements.RemoveAt(0);
+                    }
+                }
+            }
+
+
+            List<UniTask> tasks = new List<UniTask>();
+            for (int y = row - 1; y >= 0; y--)
+            {
+                for (int x = column - 1; x >= 0; x--)
+                {
+                    if (!_elements[x, y].IsActive)
+                    {
+                        tasks.Add(GenerateRandomElements(_elements[x, y], column, row));
+                    }
+                }
+            }
+
+            await UniTask.WhenAll(tasks);
+        }
+
+        private async UniTask GenerateRandomElements(Element element, int column, int row)
+        {
+            var gridPosition = element.GridPosition;
+            var elements = GetPossibleElement((int) gridPosition.x, (int) gridPosition.y, column, row);
+            element.SetConfig(elements);
+            await element.Enable();
+        }
+
+        private async UniTask DisableElements(List<Element> elementsForCollecting)
+        {
+            List<UniTask> tasks = new List<UniTask>();
+            foreach (var element in elementsForCollecting)
+            {
+                tasks.Add(element.Disable());
+            }
+
+            await UniTask.WhenAll(tasks);
         }
 
         private void Swap(Element first, Element second)
