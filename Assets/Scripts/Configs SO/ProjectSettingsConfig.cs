@@ -3,7 +3,7 @@
 namespace Match3
 {
     [CreateAssetMenu(fileName = "ProjectSettings", menuName = "Configs/ProjectSettings", order = 0)]
-    public class ProjectSettings : ScriptableObject
+    public class ProjectSettingsConfig : ScriptableObject // тут дефолтные настройти проекта!!! 
     {
         [SerializeField] private int targetFps;
         [SerializeField] private bool isMultitouch;

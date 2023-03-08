@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9261a73b125e0a842b060cbec0db2c37, type: 3}
   m_Name: ProjectConfigInstaller
   m_EditorClassIdentifier: 
-  projectSettings: {fileID: 11400000, guid: 1e9a8270926daf64096ccd7108aac2cb, type: 2}
+  projectSettingsConfig: {fileID: 11400000, guid: 1e9a8270926daf64096ccd7108aac2cb, type: 2}
