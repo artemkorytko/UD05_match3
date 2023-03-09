@@ -58,7 +58,7 @@ namespace Match3
 
         private async UniTask SetLocalPosition()
         {
-           await transform.DOLocalMove(_localPosition, 0.5f); // тут эвейт добавил все медленно но норм. работает.. 
+           await transform.DOLocalMove(_localPosition, 0.1f); // тут эвейт добавил все медленно но норм. работает.. 
             //transform.localPosition = _localPosition;
         }
 

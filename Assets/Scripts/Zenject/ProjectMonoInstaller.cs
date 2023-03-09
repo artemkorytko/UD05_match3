@@ -6,13 +6,14 @@ public class ProjectMonoInstaller : MonoInstaller  // как понял этот
 {
     public override void InstallBindings()
     {
+        Debug.Log("ProjectMonoInstaller");
+        
         SignalBusInstaller.Install(Container);  // инстал SignalBusInstaller (для работы "событий") - только после этого появляется "сущность" SignalBus
         //нужно теперь получить его в конструкторе
         
         
-        
         Container.BindInterfacesAndSelfTo<ProjectSetup>().AsSingle().NonLazy(); // AsSingle - объект только может быть один!
                                                                                 // NonLazy - тип отключить Ленивую ссылку (объект создан сразу)
-        Debug.Log("ProjectMonoInstaller");
+        
     }
 }

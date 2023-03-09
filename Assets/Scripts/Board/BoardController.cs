@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using DefaultNamespace.SaveSystems;
 using Match3.Signal;
 using UnityEngine;
 using Zenject;
@@ -8,36 +9,50 @@ using Random = UnityEngine.Random;
 
 namespace Match3
 {
-    public class BoardController : IDisposable
+    public class BoardController : IInitializable, IDisposable
     {
         private readonly ElementsConfig _config;
         private readonly Element.Factory _factory;
         private readonly BoardConfig _boardConfig;
         private readonly SignalBus _signalBus;
+        private readonly GameData _gameData;
+
 
         private Element[,] _elements;
         private Element _firstSelected;
         private bool _isBlocked;
+        
 
-        public BoardController(ElementsConfig config, Element.Factory factory, BoardConfig boardConfig, SignalBus signalBus)
+
+        public BoardController(ElementsConfig config, Element.Factory factory, BoardConfig boardConfig, SignalBus signalBus, GameData gameData)
         {
             _config = config;
             _factory = factory;
             _boardConfig = boardConfig;
             _signalBus = signalBus;
+            _gameData = gameData;
         }
-
-        public void StartGame() 
+        
+        public void Initialize()
         {
-            GenerateElements();
-            _signalBus.Subscribe<OnElementClickSignal>(OnElementClick); // подписка на "Событие"(он же сигнал)
-            _signalBus.Subscribe<RestartButtonSignal>(OnRestart); // подписка на "Событие"(он же сигнал)
+            
         }
-
+        
         public void Dispose() // эт  IDisposable
         {
             _signalBus.Unsubscribe<OnElementClickSignal>(OnElementClick); // отписка 
             _signalBus.Unsubscribe<RestartButtonSignal>(OnRestart); // отписка 
+            _gameData.Elements = _elements;
+            Debug.Log(_gameData.Elements[0,0].GridPosition);
+        }
+        
+        public void StartGame() 
+        {
+            
+            GenerateElements();
+            _signalBus.Subscribe<OnElementClickSignal>(OnElementClick); // подписка на "Событие"(он же сигнал)
+            _signalBus.Subscribe<RestartButtonSignal>(OnRestart); // подписка на "Событие"(он же сигнал)
+            
         }
 
         private async void OnRestart()
@@ -311,18 +326,34 @@ namespace Match3
             var column = _boardConfig.SizeX;
             var row = _boardConfig.SizeY;
             var offset = _boardConfig.ElementOffset;
-
-            _elements = new Element[column, row];
-
-            var startPosition = new Vector2(-column * 0.5f + offset * 0.5f, row * 0.5f - offset * 0.5f);
-            for (int y = 0; y < row; y++)
+            
+            if (_gameData.Elements == null)
             {
-                for (int x = 0; x < column; x++)
+                
+
+                _elements = new Element[column, row];
+
+                var startPosition = new Vector2(-column * 0.5f + offset * 0.5f, row * 0.5f - offset * 0.5f);
+                for (int y = 0; y < row; y++)
                 {
-                    var position = startPosition + new Vector2(offset * x, -offset * y);
-                    var element = _factory.Create(GetPossibleElement(x, y, column, row), new ElementPosition(position, new Vector2(x, y)));
-                    element.Initialize();
-                    _elements[x, y] = element;
+                    for (int x = 0; x < column; x++)
+                    {
+                        var position = startPosition + new Vector2(offset * x, -offset * y);
+                        var element = _factory.Create(GetPossibleElement(x, y, column, row), new ElementPosition(position, new Vector2(x, y)));
+                        element.Initialize();
+                        _elements[x, y] = element;
+                    }
+                }
+            }
+            else
+            {
+                _elements = _gameData.Elements;
+                for (int y = 0; y < row; y++)
+                {
+                    for (int x = 0; x < column; x++)
+                    {
+                        _elements[x,y].Initialize();
+                    }
                 }
             }
         }
@@ -349,5 +380,7 @@ namespace Match3
 
             return tempList[Random.Range(0, tempList.Count)];
         }
+
+        
     }
 }
