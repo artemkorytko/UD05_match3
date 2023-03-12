@@ -14,5 +14,9 @@ public class SignalsInstaller : Installer<SignalsInstaller>
         // все бинды сигналов надо вынести в отдельный инсталлер
         // сначала писали в Monoinstaller
         Container.DeclareSignal<OnElementClickSignal>();
+        Container.DeclareSignal<OnBoardMatchSignal>();
+        Container.DeclareSignal<AddCoinsSignal>();
+        Container.DeclareSignal<RestartButtonSignal>();
+        Container.DeclareSignal<SaveSignal>();
     }
 }

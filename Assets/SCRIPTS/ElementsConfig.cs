@@ -39,9 +39,18 @@ namespace Match3
         [SerializeField] private string key; // ключ
         [SerializeField] private Sprite sprite; // картинка
 
+        [SerializeField] private int colorR;
+        [SerializeField] private int colorG;
+        [SerializeField] private int colorB;
         public string Key => key;
 
         public Sprite Sprite => sprite;
+
+        public int ColorR => colorR;
+
+        public int ColorG => colorG;
+
+        public int ColorB => colorB;
     }
     
     

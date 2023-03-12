@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: BoardConfig
   m_EditorClassIdentifier: 
   sizeX: 5
-  sizeY: 7
-  elementOffset: 1
+  sizeY: 10
+  elementOffset: 0.9

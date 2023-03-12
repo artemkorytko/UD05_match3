@@ -16,6 +16,17 @@ public class GameMonoInstaller : MonoInstaller
         SignalsInstaller.Install(Container);
         // SignalInstaller.Install(Container);
         
+        // ДЗ ДОПИСАТЬ СЮДОЙ ------------
+        // будет биндиться класс внутрь интерфейса
+        // почитать ка кбиндить классы в интерфейсы 
+        //Container .Bind<SaveSystemWithJson>().To<ISaveSystem>();|
+        
+        Container .BindInterfacesAndSelfTo<GameManager>().AsSingle().NonLazy();
+
+        //######################## хз надо это тут или нет, но Null  Reference ошибка #################################
+        // без этого черный экран в игре:
+        Container.BindInterfacesAndSelfTo<SaveToJson>().AsSingle().NonLazy();
+        
         // биндится борд котнтроллер (создает класс BC)
         Container.BindInterfacesAndSelfTo<BoardController>().AsSingle().NonLazy();
         
@@ -26,7 +37,5 @@ public class GameMonoInstaller : MonoInstaller
         // Element - к какому классу относится
         // Element.Factory - кого используем в качестве фабрики
         // FromComponentInNewPrefab(elementPrefab) - какой префаб используем для создания фабрики
-
-        
     }
 }
