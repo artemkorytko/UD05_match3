@@ -9,5 +9,6 @@ public class SignalInstaller : Installer<SignalInstaller>
         Container.DeclareSignal<OnBoardMatchSignal>();
         Container.DeclareSignal<AddCoinsSignal>();
         Container.DeclareSignal<RestartButtonSignal>();
+        Container.DeclareSignal<StartGameSignal>();
     }
 }

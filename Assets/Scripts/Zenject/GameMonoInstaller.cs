@@ -9,7 +9,8 @@ public class GameMonoInstaller : MonoInstaller
     public override void InstallBindings()
     {
         SignalInstaller.Install(Container);
-       
+
+        Container.Bind<ISaveSystem>().To<SaveSystemJson>().AsSingle().NonLazy();
         Container.BindInterfacesAndSelfTo<GameManager>().AsSingle().NonLazy();
         Container.BindInterfacesAndSelfTo<BoardController>().AsSingle().NonLazy();
         Container.BindFactory<ElementConfigItem, ElementPosition, Element, Element.Factory>().FromComponentInNewPrefab(elementPrefab);

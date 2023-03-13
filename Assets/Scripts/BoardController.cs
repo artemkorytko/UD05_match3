@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using Match3.Signals;
 using UnityEngine;
 using Zenject;
+using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 namespace Match3
@@ -14,35 +15,89 @@ namespace Match3
         private readonly Element.Factory _factory;
         private readonly BoardConfig _boardConfig;
         private readonly SignalBus _signalBus;
+        private readonly ISaveSystem _saveSystem;
 
         private Element[,] _elements;
         private Element _firstSelected;
         private bool _isBlocked;
 
-        public BoardController(ElementsConfig config, Element.Factory factory, BoardConfig boardConfig, SignalBus signalBus)
+        public BoardController(ElementsConfig config, Element.Factory factory, BoardConfig boardConfig, SignalBus signalBus, ISaveSystem saveSystem)
         {
             _config = config;
             _factory = factory;
             _boardConfig = boardConfig;
             _signalBus = signalBus;
+            _saveSystem = saveSystem;
         }
 
         public void Initialize()
         {
-            GenerateElements();
+            _signalBus.Subscribe<StartGameSignal>(StartGame);
             _signalBus.Subscribe<OnElementClickSignal>(OnElementClick);
-            _signalBus.Subscribe<RestartButtonSignal>(DoRestart);
+            _signalBus.Subscribe<RestartButtonSignal>(OnRestartSignal);
         }
 
         public void Dispose()
         {
+            _signalBus.Unsubscribe<StartGameSignal>(StartGame);
             _signalBus.Unsubscribe<OnElementClickSignal>(OnElementClick);
-            _signalBus.Unsubscribe<RestartButtonSignal>(DoRestart);
+            _signalBus.Unsubscribe<RestartButtonSignal>(OnRestartSignal);
         }
 
-        private void DoRestart()
+        private void StartGame()
         {
-            Debug.Log("Restart");
+            var data = _saveSystem.LoadData();
+            if (data.BoardState == null)
+            {
+                GenerateElements();
+            }
+            else
+            {
+                GenerateElementsFromData(data.BoardState);
+            }
+        }
+
+        private void GenerateElementsFromData(string[] dataBoardState)
+        {
+            var column = _boardConfig.SizeX;
+            var row = _boardConfig.SizeY;
+            var offset = _boardConfig.ElementOffset;
+
+            _elements = new Element[column, row];
+            var counter = 0;
+            var startPosition = new Vector2(-column * 0.5f + offset * 0.5f, row * 0.5f - offset * 0.5f);
+            for (int y = 0; y < row; y++)
+            {
+                for (int x = 0; x < column; x++)
+                {
+                    var position = startPosition + new Vector2(offset * x, -offset * y);
+                    var element = _factory.Create(_config.GetItemByKey(dataBoardState[counter++]), new ElementPosition(position, new Vector2(x, y)));
+                    element.Initialize();
+                    _elements[x, y] = element;
+                }
+            }
+        }
+
+        private void OnRestartSignal()
+        {
+            DoRestart().Forget();
+        }
+
+        private async UniTaskVoid DoRestart()
+        {
+            var column = _boardConfig.SizeX;
+            var row = _boardConfig.SizeY;
+            for (int y = 0; y < row; y++)
+            {
+                for (int x = 0; x < column; x++)
+                {
+                    Object.Destroy(_elements[x, y].gameObject);
+                }
+            }
+
+            _elements = null;
+            await UniTask.Yield();
+            GenerateElements();
         }
 
         private async void OnElementClick(OnElementClickSignal signal)
